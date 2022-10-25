@@ -36,27 +36,27 @@ data "aws_caller_identity" "current" {}
 #   create = false
 # }
 
-# module "dms_default" {
-#   source  = "terraform-aws-modules/dms/aws"
-#   version = "~> 1.0"
+module "dms_default" {
+  source  = "terraform-aws-modules/dms/aws"
+  version = "~> 1.0"
 
-#   # Note - if enabled, this will by default only create
-#   # - DMS necessary IAM roles
-#   # - Subnet group
-#   # - Replication instance
-#   create = false # not enabling by default to avoid messing with the IAM roles
+  # Note - if enabled, this will by default only create
+  # - DMS necessary IAM roles
+  # - Subnet group
+  # - Replication instance
+  create = true # not enabling by default to avoid messing with the IAM roles
 
-#   # Subnet group
-#   repl_subnet_group_name        = local.name
-#   repl_subnet_group_description = "DMS Subnet group for ${local.name}"
-#   #repl_subnet_group_subnet_ids  = module.vpc.database_subnets
+  # Subnet group
+  repl_subnet_group_name        = local.name
+  repl_subnet_group_description = "DMS Subnet group for ${local.name}"
+  repl_subnet_group_subnet_ids  = module.vpc.database_subnets
 
-#   # Instance
-#   repl_instance_class = "dms.t3.large"
-#   repl_instance_id    = local.name
+  # Instance
+  repl_instance_class = "dms.t3.micro"
+  repl_instance_id    = local.name
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
 
 # resource "aws_db_instance" "my_database_name" {
 #   identifier        = "my-database-name"
@@ -84,6 +84,41 @@ data "aws_caller_identity" "current" {}
 ################################################################################
 # Supporting Modules
 ################################################################################
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 3.0"
+
+  name = local.name
+  cidr = "10.99.0.0/18"
+
+  azs              = ["${local.region}a", "${local.region}b", "${local.region}c"] # careful on which AZs support DMS VPC endpoint
+  public_subnets   = ["10.99.0.0/24", "10.99.1.0/24", "10.99.2.0/24"]
+  private_subnets  = ["10.99.3.0/24", "10.99.4.0/24", "10.99.5.0/24"]
+  database_subnets = ["10.99.7.0/24", "10.99.8.0/24", "10.99.9.0/24"]
+
+  create_database_subnet_group = true
+  enable_nat_gateway           = false # not required, using private VPC endpoint
+  single_nat_gateway           = true
+  map_public_ip_on_launch      = false
+
+  manage_default_security_group  = true
+  default_security_group_ingress = []
+  default_security_group_egress  = []
+
+  enable_flow_log                      = true
+  flow_log_destination_type            = "cloud-watch-logs"
+  create_flow_log_cloudwatch_log_group = true
+  create_flow_log_cloudwatch_iam_role  = true
+  flow_log_max_aggregation_interval    = 60
+  flow_log_log_format                  = "$${version} $${account-id} $${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport} $${protocol} $${packets} $${bytes} $${start} $${end} $${action} $${log-status} $${vpc-id} $${subnet-id} $${instance-id} $${tcp-flags} $${type} $${pkt-srcaddr} $${pkt-dstaddr} $${region} $${az-id} $${sublocation-type} $${sublocation-id}"
+
+  enable_dhcp_options      = true
+  enable_dns_hostnames     = true
+  dhcp_options_domain_name = data.aws_region.current.name == "us-east-1" ? "ec2.internal" : "${data.aws_region.current.name}.compute.internal"
+
+  tags = local.tags
+}
 
 module "s3_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"

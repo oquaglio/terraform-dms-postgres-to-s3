@@ -7,3 +7,8 @@ output "s3_role_name" {
   description = "Name of role"
   value       = aws_iam_role.s3_role.name
 }
+
+output "dms_replication_instance_arn" {
+  description = "ARN of DMS replication instance"
+  value       = module.dms_default.replication_instance_arn
+}
