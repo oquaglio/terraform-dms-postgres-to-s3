@@ -12,9 +12,9 @@ resource "aws_s3_object" "hr_data" {
   tags = local.tags
 }
 
-# A role to allow DMS to access bucket
+# Role to allow DMS Service to access bucket
 resource "aws_iam_role" "s3_role" {
-  name        = "${local.name}-s3"
+  name        = "${local.name}-s3-role"
   description = "Role used to migrate data from S3 via DMS"
 
   assume_role_policy = jsonencode({
@@ -32,7 +32,7 @@ resource "aws_iam_role" "s3_role" {
   })
 
   inline_policy {
-    name = "${local.name}-s3"
+    name = "${local.name}-s3-policy"
 
     policy = jsonencode({
       Version = "2012-10-17"
