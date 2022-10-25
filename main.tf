@@ -36,7 +36,7 @@ data "aws_caller_identity" "current" {}
 #   create = false
 # }
 
-module "dms_default" {
+module "dms" {
   source  = "terraform-aws-modules/dms/aws"
   version = "~> 1.0"
 
@@ -54,6 +54,25 @@ module "dms_default" {
   # Instance
   repl_instance_class = "dms.t3.micro"
   repl_instance_id    = local.name
+
+  endpoints = {
+    s3-destination = {
+      endpoint_id   = "${local.name}-s3-destination"
+      endpoint_type = "target"
+      engine_name   = "s3"
+      ssl_mode      = "none"
+
+      s3_settings = {
+        bucket_folder             = "destinationdata"
+        bucket_name               = local.bucket_name # to avoid https://github.com/hashicorp/terraform/issues/4149
+        data_format               = "parquet"
+        encryption_mode           = "SSE_S3"
+        service_access_role_arn   = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.name}-s3-role" # to avoid https://github.com/hashicorp/terraform/issues/4149
+      }
+
+      tags = { EndpointType = "s3-destination" }
+    }
+  }
 
   tags = local.tags
 }

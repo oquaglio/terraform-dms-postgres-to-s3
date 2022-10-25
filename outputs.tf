@@ -10,5 +10,5 @@ output "s3_role_name" {
 
 output "dms_replication_instance_arn" {
   description = "ARN of DMS replication instance"
-  value       = module.dms_default.replication_instance_arn
+  value       = module.dms.replication_instance_arn
 }
