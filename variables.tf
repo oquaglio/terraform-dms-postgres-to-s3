@@ -39,6 +39,12 @@ variable "environment" {
 # DMS source config
 #--------------------------------------------------------------
 
+
+variable "source_db_identifier" {
+  default     = "oq-rds-postgres-1"
+  description = "RDS DB Identiifer"
+}
+
 variable "source_db_name" {
   default     = "postgres"
   description = "Name of the database in the RDS"
