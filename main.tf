@@ -4,8 +4,8 @@ locals {
   #name   = "dms-ex-${replace(basename(path.cwd), "_", "-")}"
   name   = "dms-pgres-to-snowflake"
 
-  db_name     = "example"
-  db_username = "example"
+  db_name     = "oq-rds-postgres-1"
+  db_username = "postgres"
 
   # aws dms describe-event-categories
   replication_instance_event_categories = ["failure", "creation", "deletion", "maintenance", "failover", "low storage", "configuration change"]
@@ -21,9 +21,7 @@ locals {
   }
 }
 
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
+
 
 ################################################################################
 # DMS Module
@@ -56,6 +54,25 @@ module "dms" {
   repl_instance_id    = local.name
 
   endpoints = {
+    postgresql-source = {
+      database_name                   = "postgres"
+      endpoint_id                     = "oq-rds-postgres-1"
+      endpoint_type                   = "source"
+      engine_name                     = "postgres"
+      server_name                     = "oq-rds-postgres-1.c9exuwnufhkh.ap-southeast-2.rds.amazonaws.com"
+      port                            = "5432"
+      username                        = "${var.source_username}"
+      password                        = "${var.source_password}"
+      ssl_mode                        = "none"
+      tags = {
+        EndpointType  = "postgresql-source"
+        Name          = "Blah"
+        stack_name    = "postgres-dms-s3"
+        environment   = "dev"
+        created_by    = "terraform"
+      }
+    }
+
     s3-destination = {
       endpoint_id   = "${local.name}-s3-destination"
       endpoint_type = "target"
@@ -76,6 +93,29 @@ module "dms" {
 
   tags = local.tags
 }
+
+# Create an endpoint for the source database
+
+# resource "aws_dms_endpoint" "source" {
+#   database_name = "${var.source_db_name}"
+#   endpoint_id   = "${var.stack_name}-dms-${var.environment}-source"
+#   endpoint_type = "source"
+#   engine_name   = "${var.source_engine_name}"
+#   password      = "${var.source_app_password}"
+#   port          = "${var.source_db_port}"
+#   server_name   = "${aws_db_instance.source.address}"
+#   ssl_mode      = "none"
+#   username      = "${var.source_app_username}"
+
+#   tags {
+#     Name        = "${var.stack_name}-dms-${var.environment}-source"
+#     owner       = "${var.owner}"
+#     stack_name  = "${var.stack_name}"
+#     environment = "${var.environment}"
+#     created_by  = "terraform"
+#   }
+# }
+
 
 # resource "aws_db_instance" "my_database_name" {
 #   identifier        = "my-database-name"
