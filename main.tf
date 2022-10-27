@@ -6,7 +6,7 @@ locals {
 
   #db_name     = "oq-rds-postgres-1"
   db_username = "postgres"
-  count  = "${length(var.availability_zones)}"
+  count       = length(var.availability_zones)
 
   # aws dms describe-event-categories
   replication_instance_event_categories = ["failure", "creation", "deletion", "maintenance", "failover", "low storage", "configuration change"]
@@ -16,10 +16,10 @@ locals {
   bucket_name    = "${var.stack_name}-s3-${local.bucket_postfix}"
 
   tags = {
-    stack_name    = "${var.stack_name}"
-    environment   = "${var.environment}"
-    repository = "https://github.com/oquaglio/terraform-dms-postgres-to-s3"
-    created_by    = "terraform"
+    stack_name  = "${var.stack_name}"
+    environment = "${var.environment}"
+    repository  = "https://github.com/oquaglio/terraform-dms-postgres-to-s3"
+    created_by  = "terraform"
   }
 }
 
@@ -47,30 +47,30 @@ module "dms" {
   create = true # not enabling by default to avoid messing with the IAM roles
 
   # Subnet group
-  repl_subnet_group_name        = "${var.stack_name}"
+  repl_subnet_group_name        = var.stack_name
   repl_subnet_group_description = "DMS Subnet group for ${var.stack_name}"
   repl_subnet_group_subnet_ids  = module.vpc.database_subnets
 
   # Instance
   repl_instance_class = "dms.t3.micro"
-  repl_instance_id    = "${var.stack_name}"
+  repl_instance_id    = var.stack_name
 
   endpoints = {
     postgresql-source = {
-      database_name                   = "${var.source_db_name}"
-      endpoint_id                     = "${var.stack_name}-postgres-source"
-      endpoint_type                   = "source"
-      engine_name                     = "postgres"
-      server_name                     = "${data.aws_db_instance.source_database.address}"
-      port                            = "${var.source_db_port}"
-      username                        = "${var.source_username}"
-      password                        = "${var.source_password}"
-      ssl_mode                        = "none"
+      database_name = "${var.source_db_name}"
+      endpoint_id   = "${var.stack_name}-postgres-source"
+      endpoint_type = "source"
+      engine_name   = "postgres"
+      server_name   = "${data.aws_db_instance.source_database.address}"
+      port          = "${var.source_db_port}"
+      username      = "${var.source_username}"
+      password      = "${var.source_password}"
+      ssl_mode      = "none"
       tags = {
-        EndpointType  = "postgresql-source"
-        stack_name    = "${var.stack_name}"
-        environment   = "${var.environment}"
-        created_by    = "terraform"
+        EndpointType = "postgresql-source"
+        stack_name   = "${var.stack_name}"
+        environment  = "${var.environment}"
+        created_by   = "terraform"
       }
     }
 
@@ -81,18 +81,18 @@ module "dms" {
       ssl_mode      = "none"
 
       s3_settings = {
-        bucket_folder             = "destinationdata"
-        bucket_name               = local.bucket_name # to avoid https://github.com/hashicorp/terraform/issues/4149
-        data_format               = "parquet"
-        encryption_mode           = "SSE_S3"
-        service_access_role_arn   = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.stack_name}-s3-role" # to avoid https://github.com/hashicorp/terraform/issues/4149
+        bucket_folder           = "destinationdata"
+        bucket_name             = local.bucket_name # to avoid https://github.com/hashicorp/terraform/issues/4149
+        data_format             = "parquet"
+        encryption_mode         = "SSE_S3"
+        service_access_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.stack_name}-s3-role" # to avoid https://github.com/hashicorp/terraform/issues/4149
       }
 
       tags = {
         EndpointType = "s3-destination"
-        stack_name    = "${var.stack_name}"
-        environment   = "${var.environment}"
-        created_by    = "terraform"
+        stack_name   = "${var.stack_name}"
+        environment  = "${var.environment}"
+        created_by   = "terraform"
       }
 
     }
@@ -155,10 +155,10 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 3.0"
 
-  name = "${var.stack_name}"
+  name = var.stack_name
   cidr = "10.99.0.0/18"
 
-  azs              = ["${var.availability_zones[0]}","${var.availability_zones[1]}","${var.availability_zones[2]}"]  # careful on which AZs support DMS VPC endpoint
+  azs              = ["${var.availability_zones[0]}", "${var.availability_zones[1]}", "${var.availability_zones[2]}"] # careful on which AZs support DMS VPC endpoint
   public_subnets   = ["10.99.0.0/24", "10.99.1.0/24", "10.99.2.0/24"]
   private_subnets  = ["10.99.3.0/24", "10.99.4.0/24", "10.99.5.0/24"]
   database_subnets = ["10.99.7.0/24", "10.99.8.0/24", "10.99.9.0/24"]

@@ -3,7 +3,7 @@
 #--------------------------------------------------------------
 
 output "account_id" {
-  value = "${data.aws_caller_identity.current.account_id}"
+  value = data.aws_caller_identity.current.account_id
 }
 
 
@@ -22,11 +22,11 @@ output "dms_replication_instance_arn" {
 #--------------------------------------------------------------
 
 output "source_db_id" {
-  value = "${data.aws_db_instance.source_database.db_instance_identifier}"
+  value = data.aws_db_instance.source_database.db_instance_identifier
 }
 
 output "source_db_address" {
-  value = "${data.aws_db_instance.source_database.address}"
+  value = data.aws_db_instance.source_database.address
 }
 
 #--------------------------------------------------------------
