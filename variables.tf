@@ -21,7 +21,7 @@ variable "availability_zones" {
 
 variable "stack_name" {
   description = "The name of our application"
-  default     = "dms-postgres-to-s3"
+  default     = "postgres-dms-stack"
 }
 
 variable "owner" {
@@ -52,7 +52,7 @@ variable "source_db_name" {
 
 variable "source_db_port" {
   description = "The port the Application Server will access the database on"
-  default     = 1521
+  default     = 5432
 }
 
 variable "source_username" {
