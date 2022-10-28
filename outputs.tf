@@ -11,23 +11,23 @@ output "account_id" {
 # DMS replication instance config
 #--------------------------------------------------------------
 
-output "dms_replication_instance_arn" {
-  description = "ARN of DMS replication instance"
-  value       = module.dms.replication_instance_arn
-}
+# output "dms_replication_instance_arn" {
+#   description = "ARN of DMS replication instance"
+#   value       = module.dms.replication_instance_arn
+# }
 
 
 #--------------------------------------------------------------
 # DMS source config
 #--------------------------------------------------------------
 
-output "source_db_id" {
-  value = data.aws_db_instance.source_database.db_instance_identifier
-}
+# output "source_db_id" {
+#   value = data.aws_db_instance.source_database.db_instance_identifier
+# }
 
-output "source_db_address" {
-  value = data.aws_db_instance.source_database.address
-}
+# output "source_db_address" {
+#   value = data.aws_db_instance.source_database.address
+# }
 
 #--------------------------------------------------------------
 # DMS target config

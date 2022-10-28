@@ -58,10 +58,10 @@ module "dms" {
   endpoints = {
     postgresql-source = {
       database_name = "${var.source_db_name}"
-      endpoint_id   = "${var.stack_name}-postgres-source"
+      endpoint_id   = "${var.stack_name}-${var.environment}-${var.source_db_identifier}-source"
       endpoint_type = "source"
-      engine_name   = "postgres"
-      server_name   = "${data.aws_db_instance.source_database.address}"
+      engine_name   = "${var.source_engine}"
+      server_name   = "${aws_db_instance.source.address}"
       port          = "${var.source_db_port}"
       username      = "${var.source_username}"
       password      = "${var.source_password}"
@@ -169,8 +169,8 @@ module "vpc" {
   map_public_ip_on_launch      = false
 
   manage_default_security_group  = true
-  default_security_group_ingress = []
-  default_security_group_egress  = []
+  default_security_group_ingress = [{ self = true }]
+  default_security_group_egress  = [{ self = true }]
 
   enable_flow_log                      = true
   flow_log_destination_type            = "cloud-watch-logs"
@@ -185,6 +185,87 @@ module "vpc" {
 
   tags = local.tags
 }
+
+
+module "vpc_endpoints" {
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "~> 3.0"
+
+  vpc_id             = module.vpc.vpc_id
+  security_group_ids = [module.vpc_endpoint_security_group.security_group_id]
+
+  endpoints = {
+    dms = {
+      service             = "dms"
+      private_dns_enabled = true
+      subnet_ids          = [element(module.vpc.database_subnets, 0), element(module.vpc.database_subnets, 1)] # careful on which AZs support DMS VPC endpoint
+      tags                = { Name = "dms-vpc-endpoint" }
+    }
+    s3 = {
+      service         = "s3"
+      service_type    = "Gateway"
+      route_table_ids = flatten([module.vpc.private_route_table_ids, module.vpc.database_route_table_ids])
+      tags            = { Name = "s3-vpc-endpoint" }
+    }
+    secretsmanager = {
+      service_name = "com.amazonaws.${var.region}.secretsmanager"
+      subnet_ids   = module.vpc.database_subnets
+    }
+  }
+
+  tags = local.tags
+}
+
+module "vpc_endpoint_security_group" {
+  source  = "terraform-aws-modules/security-group/aws"
+  version = "~> 4.0"
+
+  name        = "${var.stack_name}-vpc-endpoint"
+  description = "Security group for VPC endpoints"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "VPC Endpoints HTTPs for the VPC CIDR"
+      cidr_blocks = module.vpc.vpc_cidr_block
+    }
+  ]
+
+  egress_cidr_blocks = [module.vpc.vpc_cidr_block]
+  egress_rules       = ["all-all"]
+
+  tags = local.tags
+}
+
+module "security_group" {
+  source  = "terraform-aws-modules/security-group/aws"
+  version = "~> 4.0"
+
+  # Creates multiple
+  for_each = {
+    postgresql-source    = ["postgresql-tcp"]
+    mysql-destination    = ["mysql-tcp"]
+    replication-instance = ["postgresql-tcp", "mysql-tcp", "kafka-broker-tls-tcp"]
+    kafka-destination    = ["kafka-broker-tls-tcp"]
+  }
+
+  name        = "${var.stack_name}-${each.key}"
+  description = "Security group for ${each.key}"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_cidr_blocks = module.vpc.database_subnets_cidr_blocks
+  ingress_rules       = each.value
+
+  egress_cidr_blocks = [module.vpc.vpc_cidr_block]
+  egress_rules       = ["all-all"]
+
+  tags = local.tags
+}
+
+
 
 module "s3_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
