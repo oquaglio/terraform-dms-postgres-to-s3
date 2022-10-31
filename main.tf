@@ -75,7 +75,7 @@ module "dms" {
     }
 
     s3-destination = {
-      endpoint_id   = "${var.stack_name}-s3-destination"
+      endpoint_id   = "${var.stack_name}-${var.environment}-s3-destination"
       endpoint_type = "target"
       engine_name   = "s3"
       ssl_mode      = "none"
