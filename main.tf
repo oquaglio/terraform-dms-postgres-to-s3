@@ -168,9 +168,20 @@ module "vpc" {
   single_nat_gateway           = true
   map_public_ip_on_launch      = false
 
-  manage_default_security_group  = true
-  default_security_group_ingress = [{ self = true }]
-  default_security_group_egress  = [{ self = true }]
+  manage_default_security_group = true
+  default_security_group_ingress = [
+    { self = true },
+    {
+      description      = "Allow all ingress traffic"
+      from_port        = 0
+      to_port          = 0
+      protocal         = "-1"
+      cidr_blocks      = "0.0.0.0/0"
+      ipv6_cidr_blocks = ""
+      security_groups  = ""
+    }
+  ]
+  default_security_group_egress = [{ self = true }]
 
   enable_flow_log                      = true
   flow_log_destination_type            = "cloud-watch-logs"

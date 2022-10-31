@@ -55,6 +55,7 @@ resource "aws_iam_role" "s3_role" {
 resource "aws_db_instance" "source" {
   identifier              = "${var.stack_name}-${var.environment}-${var.source_db_identifier}-source"
   parameter_group_name    = aws_db_parameter_group.source-pg.name
+  publicly_accessible     = true
   allocated_storage       = var.source_storage
   engine                  = var.source_engine
   engine_version          = var.source_engine_version
