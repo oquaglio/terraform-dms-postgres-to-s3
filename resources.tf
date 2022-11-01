@@ -29,13 +29,13 @@ resource "aws_iam_role" "s3_role" {
       Version = "2012-10-17"
       Statement = [
         {
-          Sid      = "DMSRead"
-          Action   = ["s3:GetObject"]
+          Sid      = "DMSAllAccess"
+          Action   = ["s3:*"]
           Effect   = "Allow"
           Resource = "${module.s3_bucket.s3_bucket_arn}/*"
         },
         {
-          Sid      = "DMSList"
+          Sid      = "DMSListAccess"
           Action   = ["s3:ListBucket"]
           Effect   = "Allow"
           Resource = module.s3_bucket.s3_bucket_arn
@@ -54,6 +54,8 @@ resource "aws_iam_role" "s3_role" {
 
 resource "aws_db_instance" "source" {
   identifier              = "${var.stack_name}-${var.environment}-${var.source_db_identifier}-source"
+  parameter_group_name    = aws_db_parameter_group.source-pg.name
+  publicly_accessible     = true
   allocated_storage       = var.source_storage
   engine                  = var.source_engine
   engine_version          = var.source_engine_version
@@ -67,10 +69,29 @@ resource "aws_db_instance" "source" {
   backup_window           = var.source_backup_window
   maintenance_window      = var.source_maintenance_window
   storage_encrypted       = var.source_storage_encrypted
-
-
   # only for dev/test builds
   skip_final_snapshot = true
 
+}
+
+resource "aws_db_parameter_group" "source-pg" {
+  family = "postgres13"
+  name   = "${var.stack_name}-postgres13-pg"
+  parameter {
+    apply_method = "pending-reboot"
+    name         = "rds.logical_replication"
+    value        = "1"
+  }
+  parameter {
+    apply_method = "immediate"
+    name         = "wal_sender_timeout"
+    value        = "0"
+  }
+
+  parameter {
+    apply_method = "pending-reboot"
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements,pglogical"
+  }
 
 }

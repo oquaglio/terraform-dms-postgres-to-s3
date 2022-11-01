@@ -13,7 +13,7 @@ locals {
   replication_task_event_categories     = ["failure", "state change", "creation", "deletion", "configuration change"]
 
   bucket_postfix = "${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}"
-  bucket_name    = "${var.stack_name}-s3-${local.bucket_postfix}"
+  bucket_name    = "${var.stack_name}-s3-${var.environment}-${local.bucket_postfix}"
 
   tags = {
     stack_name  = "${var.stack_name}"
@@ -28,13 +28,6 @@ locals {
 ################################################################################
 # DMS Module
 ################################################################################
-
-# module "dms_disabled" {
-#   source  = "terraform-aws-modules/dms/aws"
-#   version = "~> 1.0"
-
-#   create = false
-# }
 
 module "dms" {
   source  = "terraform-aws-modules/dms/aws"
@@ -75,7 +68,7 @@ module "dms" {
     }
 
     s3-destination = {
-      endpoint_id   = "${var.stack_name}-s3-destination"
+      endpoint_id   = local.bucket_name
       endpoint_type = "target"
       engine_name   = "s3"
       ssl_mode      = "none"
@@ -84,6 +77,9 @@ module "dms" {
         bucket_folder           = "destinationdata"
         bucket_name             = local.bucket_name # to avoid https://github.com/hashicorp/terraform/issues/4149
         data_format             = "parquet"
+        parquet_version         = "parquet-2-0"
+        timestamp_column_name   = "TIMESTAMP"
+        compression_type        = "GZIP"
         encryption_mode         = "SSE_S3"
         service_access_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.stack_name}-s3-role" # to avoid https://github.com/hashicorp/terraform/issues/4149
       }
@@ -98,54 +94,21 @@ module "dms" {
     }
   }
 
+  replication_tasks = {
+    postgres_s3 = {
+      replication_task_id       = "${var.stack_name}-postgres-to-s3"
+      migration_type            = "full-load-and-cdc"
+      replication_task_settings = file("configs/task_settings.json")
+      table_mappings            = file("configs/table_mappings.json")
+      source_endpoint_key       = "postgresql-source"
+      target_endpoint_key       = "s3-destination"
+      tags                      = { Task = "PostgreSQL-to-S3" }
+    }
+  }
+
   tags = local.tags
 }
 
-# Create an endpoint for the source database
-
-# resource "aws_dms_endpoint" "source" {
-#   database_name = "${var.source_db_name}"
-#   endpoint_id   = "${var.stack_name}-dms-${var.environment}-source"
-#   endpoint_type = "source"
-#   engine_name   = "${var.source_engine_name}"
-#   password      = "${var.source_app_password}"
-#   port          = "${var.source_db_port}"
-#   server_name   = "${aws_db_instance.source.address}"
-#   ssl_mode      = "none"
-#   username      = "${var.source_app_username}"
-
-#   tags {
-#     Name        = "${var.stack_name}-dms-${var.environment}-source"
-#     owner       = "${var.owner}"
-#     stack_name  = "${var.stack_name}"
-#     environment = "${var.environment}"
-#     created_by  = "terraform"
-#   }
-# }
-
-
-# resource "aws_db_instance" "my_database_name" {
-#   identifier        = "my-database-name"
-#   allocated_storage = 100
-#   instance_class    = "db.m4.large"
-
-#   engine         = "postgres"
-#   engine_version = "10.6"
-#   name           = "<my_database_name>"
-#   username       = "postgres"
-#   password       = "<my_database_password>"
-
-#   vpc_security_group_ids = [aws_security_group.my_database_name.id]
-#   db_subnet_group_name   = aws_db_subnet_group.my_database_name.name
-
-#   multi_az                = true
-#   storage_type            = "gp2"
-#   backup_retention_period = 6
-#   storage_encrypted       = true
-
-#   skip_final_snapshot       = false
-#   final_snapshot_identifier = "final-snapshot-my-database-name"
-# }
 
 ################################################################################
 # Supporting Modules
@@ -168,9 +131,20 @@ module "vpc" {
   single_nat_gateway           = true
   map_public_ip_on_launch      = false
 
-  manage_default_security_group  = true
-  default_security_group_ingress = [{ self = true }]
-  default_security_group_egress  = [{ self = true }]
+  manage_default_security_group = true
+  default_security_group_ingress = [
+    { self = true },
+    {
+      description      = "Allow all ingress traffic"
+      from_port        = 0
+      to_port          = 0
+      protocal         = "-1"
+      cidr_blocks      = "0.0.0.0/0"
+      ipv6_cidr_blocks = ""
+      security_groups  = ""
+    }
+  ]
+  default_security_group_egress = [{ self = true }]
 
   enable_flow_log                      = true
   flow_log_destination_type            = "cloud-watch-logs"
