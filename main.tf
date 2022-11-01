@@ -94,6 +94,18 @@ module "dms" {
     }
   }
 
+  replication_tasks = {
+    postgres_s3 = {
+      replication_task_id       = "${var.stack_name}-postgres-to-s3"
+      migration_type            = "full-load-and-cdc"
+      replication_task_settings = file("configs/task_settings.json")
+      table_mappings            = file("configs/table_mappings.json")
+      source_endpoint_key       = "postgresql-source"
+      target_endpoint_key       = "s3-destination"
+      tags                      = { Task = "PostgreSQL-to-S3" }
+    }
+  }
+
   tags = local.tags
 }
 
