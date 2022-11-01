@@ -13,7 +13,7 @@ locals {
   replication_task_event_categories     = ["failure", "state change", "creation", "deletion", "configuration change"]
 
   bucket_postfix = "${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}"
-  bucket_name    = "${var.stack_name}-s3-${local.bucket_postfix}"
+  bucket_name    = "${var.stack_name}-s3-${var.environment}-${local.bucket_postfix}"
 
   tags = {
     stack_name  = "${var.stack_name}"
@@ -68,7 +68,7 @@ module "dms" {
     }
 
     s3-destination = {
-      endpoint_id   = "${var.stack_name}-${var.environment}-s3-destination"
+      endpoint_id   = local.bucket_name
       endpoint_type = "target"
       engine_name   = "s3"
       ssl_mode      = "none"
