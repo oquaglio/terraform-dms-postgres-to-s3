@@ -29,13 +29,13 @@ resource "aws_iam_role" "s3_role" {
       Version = "2012-10-17"
       Statement = [
         {
-          Sid      = "DMSRead"
-          Action   = ["s3:GetObject"]
+          Sid      = "DMSAllAccess"
+          Action   = ["s3:*"]
           Effect   = "Allow"
           Resource = "${module.s3_bucket.s3_bucket_arn}/*"
         },
         {
-          Sid      = "DMSList"
+          Sid      = "DMSListAccess"
           Action   = ["s3:ListBucket"]
           Effect   = "Allow"
           Resource = module.s3_bucket.s3_bucket_arn
