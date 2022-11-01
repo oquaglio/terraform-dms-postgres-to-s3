@@ -77,6 +77,9 @@ module "dms" {
         bucket_folder           = "destinationdata"
         bucket_name             = local.bucket_name # to avoid https://github.com/hashicorp/terraform/issues/4149
         data_format             = "parquet"
+        parquet_version         = "parquet-2-0"
+        timestamp_column_name   = "TIMESTAMP"
+        compression_type        = "GZIP"
         encryption_mode         = "SSE_S3"
         service_access_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.stack_name}-s3-role" # to avoid https://github.com/hashicorp/terraform/issues/4149
       }
