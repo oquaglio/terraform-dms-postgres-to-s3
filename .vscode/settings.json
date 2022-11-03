@@ -1,5 +1,6 @@
 {
     "conventionalCommits.scopes": [
-        "rds"
+        "rds",
+        "snowflake"
     ]
 }
