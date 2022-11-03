@@ -97,9 +97,64 @@ resource "aws_db_parameter_group" "source-pg" {
 }
 
 
+
 ################################################################################
-# Terraform Resources
+# Snowflake Resources
 ################################################################################
+
+locals {
+  role_name = "snowflake-integration-object-role"
+  role_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.role_name}"
+}
+
+# Storage integration object
+# Note: the arn for the IAM role is pre-calculated to get around
+# the apparent circular dependency
+resource "snowflake_storage_integration" "snowflake_int_obj" {
+  name    = "S3_INT_AWS_RDS"
+  comment = "Storage integration for RDS data loading from AWS"
+  type    = "EXTERNAL_STAGE"
+
+  enabled = true
+
+  storage_allowed_locations = ["s3://${local.bucket_name}/"]
+  #   storage_blocked_locations = [""]
+  #   storage_aws_object_acl    = "bucket-owner-full-control"
+
+  storage_provider = "S3"
+  #storage_aws_external_id  = "..."
+  #storage_aws_iam_user_arn = "..."
+  storage_aws_role_arn = local.role_arn
+}
+
+#
+# Role to allow integration object access to the S3 bucket
+resource "aws_iam_role" "iam-int-obj-role" {
+  name = local.role_name
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : snowflake_storage_integration.snowflake_int_obj.storage_aws_iam_user_arn
+        },
+        "Action" : "sts:AssumeRole",
+        "Condition" : {
+          "StringEquals" : {
+            "sts:ExternalId" : snowflake_storage_integration.snowflake_int_obj.storage_aws_external_id
+          }
+        }
+      }
+    ]
+  })
+
+  tags = local.tags
+}
+
 
 resource "snowflake_warehouse" "warehouse" {
   name           = var.snowflake_warehouse
