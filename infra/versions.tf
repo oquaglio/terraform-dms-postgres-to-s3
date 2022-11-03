@@ -16,5 +16,10 @@ terraform {
       source  = "hashicorp/time"
       version = "~> 0.7.2"
     }
+
+    snowflake = {
+      source  = "Snowflake-Labs/snowflake"
+      version = "0.49.0"
+    }
   }
 }

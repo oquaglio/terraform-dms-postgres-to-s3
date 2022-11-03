@@ -95,3 +95,15 @@ resource "aws_db_parameter_group" "source-pg" {
   }
 
 }
+
+
+################################################################################
+# Terraform Resources
+################################################################################
+
+resource "snowflake_warehouse" "warehouse" {
+  name           = var.snowflake_warehouse
+  warehouse_size = var.snowflake_warehouse_size
+
+  auto_suspend = 60
+}

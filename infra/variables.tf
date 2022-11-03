@@ -196,3 +196,38 @@ variable "vpc_cidr" {
   description = "CIDR for the whole VPC"
   default     = "10.0.0.0/24"
 }
+
+
+#--------------------------------------------------------------
+# Snowflake
+#
+# Override using cmd line args or .tfvars file
+#--------------------------------------------------------------
+
+variable "snowflake_user" {
+  description = ""
+}
+
+variable "snowflake_role" {
+  description = ""
+}
+
+variable "snowflake_private_key_path" {
+  description = ""
+}
+
+variable "snowflake_account" {
+  description = ""
+}
+
+variable "snowflake_region" {
+  description = ""
+}
+
+variable "snowflake_warehouse" {
+  description = ""
+}
+
+variable "snowflake_warehouse_size" {
+  description = ""
+}
