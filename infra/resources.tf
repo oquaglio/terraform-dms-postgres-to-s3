@@ -162,3 +162,10 @@ resource "snowflake_warehouse" "warehouse" {
 
   auto_suspend = 60
 }
+
+resource "snowflake_file_format" "parquet_file_format" {
+  name        = "PARQUET_FILE_FORMAT"
+  database    = "DEV"
+  schema      = "RAW"
+  format_type = "PARQUET"
+}
