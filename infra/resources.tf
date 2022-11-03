@@ -2,7 +2,6 @@ resource "random_pet" "this" {
   length = 2
 }
 
-
 # Role to allow DMS Service to access bucket
 resource "aws_iam_role" "s3_role" {
   name        = "${var.stack_name}-s3-role"
@@ -46,7 +45,6 @@ resource "aws_iam_role" "s3_role" {
 
   tags = local.tags
 }
-
 
 ################################################################################
 # Source Database
@@ -95,8 +93,6 @@ resource "aws_db_parameter_group" "source-pg" {
   }
 
 }
-
-
 
 ################################################################################
 # Snowflake Resources
