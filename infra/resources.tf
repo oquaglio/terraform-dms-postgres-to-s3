@@ -168,4 +168,13 @@ resource "snowflake_file_format" "parquet_file_format" {
   database    = "DEV"
   schema      = "RAW"
   format_type = "PARQUET"
+  compression = "AUTO"
+}
+
+resource "snowflake_stage" "s3_stage" {
+  name                = "S3_STAGE"
+  url                 = "s3://${local.bucket_name}/"
+  database            = "DEV"
+  schema              = "RAW"
+  storage_integration = snowflake_storage_integration.snowflake_int_obj.name
 }
