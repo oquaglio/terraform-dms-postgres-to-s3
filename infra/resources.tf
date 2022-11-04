@@ -186,3 +186,56 @@ resource "snowflake_pipe" "movie_pipe" {
   copy_statement = "COPY INTO DEV.RAW.MOVIE (ID, TITLE, YEAR, RATING, SOURCE) FROM (SELECT t.$1:id::INTEGER as id, t.$1:title::VARCHAR as title, t.$1:year::INTEGER as year, t.$1:rating::DECIMAL(3,1) as rating, 'DU Stack' as source FROM @DEV.RAW.S3_STAGE/destinationdata/movie as t);"
   auto_ingest    = true
 }
+
+resource "snowflake_table" "movie" {
+  database            = "DEV"
+  schema              = "RAW"
+  name                = "MOVIE"
+  comment             = "A table for movies."
+  data_retention_days = 1
+  change_tracking     = false
+
+  column {
+    name = "SEQ_ID"
+    type = "int"
+    identity {
+      start_num = 1
+      step_num  = 1
+    }
+  }
+
+  column {
+    name     = "ID"
+    type     = "INTEGER"
+    nullable = true
+  }
+
+  column {
+    name     = "TITLE"
+    type     = "VARCHAR"
+    nullable = true
+  }
+
+  column {
+    name     = "YEAR"
+    type     = "INTEGER"
+    nullable = false
+  }
+
+  column {
+    name     = "RATING"
+    type     = "DECIMAL(3,1)"
+    nullable = false
+  }
+
+  column {
+    name = "DMS_TIMESTAMP"
+    type = "DATE"
+  }
+
+  column {
+    name    = "SOURCE"
+    type    = "STRING"
+    comment = "The source the data was loaded from"
+  }
+}
