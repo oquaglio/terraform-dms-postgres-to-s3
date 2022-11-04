@@ -175,3 +175,14 @@ resource "snowflake_stage" "s3_stage" {
   storage_integration = snowflake_storage_integration.snowflake_int_obj.name
   file_format         = "FORMAT_NAME = DEV.RAW.PARQUET_FILE_FORMAT"
 }
+
+resource "snowflake_pipe" "movie_pipe" {
+  database = "DEV"
+  schema   = "RAW"
+  name     = "movie_pipe"
+
+  comment = "Pipe for loading movie data."
+
+  copy_statement = "COPY INTO DEV.RAW.MOVIE (ID, TITLE, YEAR, RATING, SOURCE) FROM (SELECT t.$1:id::INTEGER as id, t.$1:title::VARCHAR as title, t.$1:year::INTEGER as year, t.$1:rating::DECIMAL(3,1) as rating, 'DU Stack' as source FROM @DEV.RAW.S3_STAGE/destinationdata/movie as t);"
+  auto_ingest    = true
+}
