@@ -173,4 +173,5 @@ resource "snowflake_stage" "s3_stage" {
   database            = "DEV"
   schema              = "RAW"
   storage_integration = snowflake_storage_integration.snowflake_int_obj.name
+  file_format         = "FORMAT_NAME = DEV.RAW.PARQUET_FILE_FORMAT"
 }
