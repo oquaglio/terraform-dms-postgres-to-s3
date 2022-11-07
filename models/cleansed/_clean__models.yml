@@ -1,0 +1,29 @@
+
+version: 2
+
+models:
+  - name: clean__movie
+    description: "CLEANSED movie model"
+    columns:
+      - name: seq_id
+        description: "Primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: id
+        description: "Unique key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: title
+        description: "Movie title"
+        tests:
+          - not_null
+      - name: year
+        description: "Movie year"
+        tests:
+          - not_null
+      - name: rating
+        description: "Movie rating"
+        tests:
+          - not_null

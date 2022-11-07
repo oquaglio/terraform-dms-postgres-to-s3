@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "RAW movie table populated by AWS DMS"
+    database: DEV
+    schema: RAW
+    tables:
+      - name: movie
+        description: "RAW Movie table"
