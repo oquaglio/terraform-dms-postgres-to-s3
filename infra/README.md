@@ -1,4 +1,11 @@
-# /Infra - Terraform
+# Terraform (/infra)
+
+## RDS
+
+To connect:
+
+- Make RDS instance publically accessible
+- Copy Endpoint from AW RDS console
 
 ## References
 
@@ -9,11 +16,3 @@ https://github.com/terraform-aws-modules/terraform-aws-dms
 Other examples:
 
 https://github.com/GeoscienceAustralia/aws-dms-example
-
-## Usage
-
-```bash
-terraform init
-terraform plan
-terraform apply
-```
