@@ -5,7 +5,7 @@ locals {
   #name   = "dms-pgres-to-snowflake"
 
   #db_name     = "oq-rds-postgres-1"
-  db_username = "postgres"
+  db_username = var.source_username
   count       = length(var.availability_zones)
 
   # aws dms describe-event-categories
